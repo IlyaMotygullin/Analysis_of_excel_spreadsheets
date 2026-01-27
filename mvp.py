@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime as date
 import re
+import numpy as num
 
 # чтение excel-файла
 def analysisi_excel_file(path_file: str) -> list:
@@ -10,21 +11,22 @@ def analysisi_excel_file(path_file: str) -> list:
 def search_date(text: str) -> bool:
     return re.search(r'\b\d{2}\.\d{4}\b', text)
 
-# TODO: научиться получать данные с таблицы по датам(диапазон в плоскости Х)
-# TODO: получить значения под колонками с датами
+# TODO: реализовать аналогичный алгоритм для получения данных из листов где нет четкой даты
+# TODO: форматирование данных
 
 
-def format_date(date_list: list) -> None: # -> функция только для вывода отформтированных данных(дата)
+def format_date(date_list: list) -> list: # -> функция только для вывода отформтированных данных(дата)
+    list_date = []
+    
     for element_list in date_list:
         if isinstance(element_list, date):
-            print(date.strftime(element_list, '%d.%m.%Y'))
+            list_date.append(date.strftime(element_list, '%d.%m.%Y'))
         else:
             str_element = str(element_list)
             match_date = re.search(r'\d{2}.\d{2}.\d{4}', str_element)
-            print(date.strftime(date.strptime(match_date.group(), '%d.%m.%Y').date(), '%d.%m.%Y'))
+            list_date.append(date.strftime(date.strptime(match_date.group(), '%d.%m.%Y').date(), '%d.%m.%Y'))
     
-                    
-    return None
+    return list_date 
 
 # -> получение даты вместе с ее координатами
 def get_date_excel(path: str, sheet_name: str) -> dict:
@@ -106,11 +108,80 @@ for index in list_sheet_excel:
 
 user_opinion = input()
 
-# format_date(date_list=list_record)
-
-# get_column_value(path=path_file, sheet=user_opinion, list_date=list_record)
-
 dict_date_coordinate = get_date_excel(path=path_file, sheet_name=user_opinion)
 
-list = ['2021-11-01 00:00:00', '2021-11-05 00:00:00']
-create_diaposon(path_file, user_opinion, dict_date_coordinate, list)
+for key, value in dict_date_coordinate.items():
+    print(f'{key} - {value}')
+
+# получение отфоратированных дат из excel
+def get_date_list(dict_date: dict) -> list:
+    return format_date(dict_date.keys())
+
+list_date = get_date_list(dict_date_coordinate) # -> список отформатированных дат
+
+# функция для проверки типа(не несет никакого смысла)
+def print_type_element(list_date: list) -> None:
+    for element in list_date:
+        print(type(element))
+    return None
+
+print()
+
+for element in list_date:
+    print(f'{element} -> {type(element)}')
+    
+def choose_user_date(date_user_one: str, date_user_two: str) -> list:
+    list_user_date = []
+    list_user_date.append(date_user_one)
+    list_user_date.append(date_user_two)
+    return list_user_date
+
+print('Введите дату 1: ')
+user_date_one = input()
+print('Введите  дату 2:')
+user_date_two = input()
+
+# -> функция для проверки принадлежности всех элементов к одному типу данных
+def check_type_element(list_data: list) -> bool:
+    result_check = all(type(x) == type(list_data[0]) and isinstance(x, date) for x in list_data)
+    return result_check
+
+def get_value_diapason(path_file: str, sheet_name: str, dict_date: dict, list_date_user: list) -> None:
+    date_list_excel = list(dict_date.keys())
+    
+    if check_type_element(date_list_excel):
+        date_user_one = date.strptime(list_date_user[0], '%d.%m.%Y')
+        date_user_two = date.strptime(list_date_user[1], '%d.%m.%Y')
+        
+        list_date_user = []
+        list_date_user.append(str(date_user_one))
+        list_date_user.append(str(date_user_two))
+        
+        create_diaposon(path_file, sheet_name, dict_date, list_date_user)
+    else:
+        find_user_date1 = ''
+        find_user_date2 = ''
+        
+        for key in dict_date:
+            if list_date_user[0] in key:
+                find_user_date1 = list_date_user[0]
+                break
+             
+        for key in dict_date:
+            if list_date_user[1] in key:
+                find_user_date2 = list_date_user[1]
+                break
+                
+        
+        list_user_date = []
+        
+        print(find_user_date1)
+        print(find_user_date2)
+        
+        create_diaposon(path_file, sheet_name, dict_date, list_user_date)
+
+list_user_dates = choose_user_date(user_date_one, user_date_two)
+get_value_diapason(path_file, user_opinion, dict_date_coordinate, list_date_user=list_user_dates)
+
+# list = ['2021-11-01 00:00:00', '2021-11-05 00:00:00']
+# create_diaposon(path_file, user_opinion, dict_date_coordinate, list)
